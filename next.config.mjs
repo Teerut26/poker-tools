@@ -17,6 +17,10 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  env: {
+    mqttbroker: "mqtt://broker.emqx.io",
+    pocketbase: "https://poker-tools.pockethost.io",
+  },
 };
 
 export default config;
