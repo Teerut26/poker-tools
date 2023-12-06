@@ -1,21 +1,28 @@
 // use in backend
 import { RoomInterface } from "@/interfaces/RoomInterface";
+import { UserInterface } from "@/interfaces/UserInterface";
 import { pb, pbAuth } from "@/utils/pocketbase";
+import bcrypt from "bcrypt";
 
 type Room = {
   name: string;
   password?: string;
   pot: number;
   users?: string[];
+  owner: string;
 };
 
 export const createRoom = async (data: Room): Promise<RoomInterface> => {
   const pocketbase = await pbAuth(pb);
+
+  const passwordHash = bcrypt.hash(data.password!, 10);
+
   const record = await pocketbase.collection("room").create<RoomInterface>({
     name: data.name,
-    password: data.password,
+    password: passwordHash,
     pot: data.pot,
     users: data.users || [],
+    owner: data.owner,
   });
   return record;
 };
@@ -29,9 +36,13 @@ type Join = {
 export const joinRoom = async (data: Join) => {
   const pocketbase = await pbAuth(pb);
   const record_for_check = await pb.collection("room").getOne<RoomInterface>(data.record_id);
-  if (record_for_check.password && record_for_check.password !== data.password) {
+  
+  const passwordCheckResult = await bcrypt.compare(data.password!, record_for_check.password!);
+
+  if (!passwordCheckResult) {
     throw new Error("Wrong password");
   }
+
   const record = await pocketbase.collection("room").update<RoomInterface>(data.record_id, {
     users: [...record_for_check.users, data.user_record_id],
   });

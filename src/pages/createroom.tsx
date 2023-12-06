@@ -2,10 +2,13 @@ import { api } from '@/utils/api'
 import { toast } from "react-hot-toast"
 import { NextPage } from 'next'
 import { ChangeEvent, useState } from 'react'
+import MainLayout from '@/layouts/MainLayout'
+import useUserHook from '@/hooks/useUserHook'
 
 interface Props { }
 
 const Createroom: NextPage<Props> = () => {
+    const { user, updateUser } = useUserHook()
     const roomApi = api.roomRouter.create.useMutation()
     const [roomName, setRoomName] = useState<string>("")
     const [roomPassword, setRoomPassword] = useState<string>("")
@@ -28,6 +31,7 @@ const Createroom: NextPage<Props> = () => {
         roomApi.mutate({
             roomname: roomName,
             roompassword: roomPassword || undefined,
+            user_record_id: user?.id!
         }, {
             onError: (err) => {
                 if (err instanceof Error) {
@@ -60,7 +64,7 @@ const Createroom: NextPage<Props> = () => {
 
 
     return (
-        <div className="min-h-screen flex justify-center items-center">
+        <MainLayout back>
             <form onSubmit={handleCreateRoom} className="max-w-sm mx-3 flex flex-col gap-2 w-full">
                 <h2 className="card-title">สร้างห้อง</h2>
                 <input onChange={onChangeRoomName} value={roomName} type="text" placeholder="Room name" className="input input-bordered w-full" />
@@ -73,7 +77,7 @@ const Createroom: NextPage<Props> = () => {
                     สร้าง
                 </button>
             </form>
-        </div>
+        </MainLayout>
     );
 }
 
