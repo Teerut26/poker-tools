@@ -1,9 +1,7 @@
 import MainLayout from '@/layouts/MainLayout'
 import { NextPage } from 'next'
 
-interface Props {}
-
-const Joinroom: NextPage<Props> = () => {
+const Joinroom: NextPage = () => {
     return (
         <MainLayout>
         sdf
