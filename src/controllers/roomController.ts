@@ -71,3 +71,20 @@ export const resetRoom = async (data: Reset) => {
   });
   return record;
 };
+
+type Delete = {
+  record_id: string;
+  owner_record_id: string;
+};
+
+export const deleteRoom = async (data: Delete) => {
+  const pocketbase = await pbAuth(pb);
+  const record_old = await pb.collection("room").getOne<RoomInterface>(data.record_id);
+
+  if (record_old.users[0] !== data.owner_record_id) {
+    throw new Error("You are not the owner of this room");
+  }
+
+  const record = await pocketbase.collection("room").delete(data.record_id);
+  return record;
+};

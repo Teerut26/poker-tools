@@ -1,17 +1,16 @@
 import useUserHook from '@/hooks/useUserHook'
-import { RoomInterface, RoomInterfaceExpand } from '@/interfaces/RoomInterface'
-import { UserInterface } from '@/interfaces/UserInterface'
+import { RoomInterface } from '@/interfaces/RoomInterface'
 import MainLayout from '@/layouts/MainLayout'
 import { api } from '@/utils/api'
 import { pb } from '@/utils/pocketbase'
-import { NextPage, NextPageContext } from 'next'
+import { NextPageContext } from 'next'
 import { useRouter } from 'next/navigation'
 import { ClientResponseError } from 'pocketbase'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import _ from 'lodash'
 import Player from '@/components/Player'
-import { UserIcon } from 'lucide-react'
+import { Gamepad2Icon, Trash2Icon } from 'lucide-react'
 
 Room.getInitialProps = async (ctx: NextPageContext) => {
     const { id } = ctx.query
@@ -25,17 +24,20 @@ interface Props {
 }
 
 export default function Room({ id }: Props) {
+    const [RoomData, setRoomData] = useState<RoomInterface>({} as RoomInterface);
+    const [Money, setMoney] = useState("");
+    const [Password, setPassword] = useState<string>("");
+    const [HasPassword, setHasPassword] = useState(false);
+    const [Users, setUsers] = useState<string[]>([]);
+    const [IsLoading, setIsLoading] = useState(true);
+
+    const { user } = useUserHook();
+    const { push } = useRouter();
+
     const joinRoomApi = api.roomRouter.join.useMutation()
     const betApi = api.userRouter.bet.useMutation()
     const winnerApi = api.userRouter.winner.useMutation()
-    const { push } = useRouter()
-    const [RoomData, setRoomData] = useState<RoomInterface>({} as RoomInterface)
-    const [Money, setMoney] = useState("")
-    const [Password, setPassword] = useState<string>("")
-    const [HasPassword, setHasPassword] = useState(false)
-    const { user } = useUserHook()
-    const [Users, setUsers] = useState<string[]>([])
-    const [IsLoading, setIsLoading] = useState(true)
+    const deleteRoomApi = api.roomRouter.delete.useMutation()
 
     useEffect(() => {
         if (!user) {
@@ -46,9 +48,7 @@ export default function Room({ id }: Props) {
             setIsLoading(true)
             try {
                 const roomData = await pb.collection('room').getOne<RoomInterface>(id as string)
-
                 setUsers(roomData.users)
-
                 setRoomData(roomData)
 
                 if (roomData.users.includes(user?.id!)) {
@@ -73,10 +73,13 @@ export default function Room({ id }: Props) {
             }
 
         })()
+    }, [user?.id])
 
-        pb.collection('room').subscribe<RoomInterface>(id as string, async function (e) {
+    useEffect(() => {
+        pb.collection('room').subscribe<RoomInterface>(id as string, function (e) {
             if (e.action === 'update') {
                 setRoomData(e.record)
+                setUsers(e.record.users)
             } else if (e.action === 'delete') {
                 push('/')
             }
@@ -86,7 +89,7 @@ export default function Room({ id }: Props) {
         return () => {
             pb.collection('room').unsubscribe(id as string);
         }
-    }, [user?.id])
+    }, [])
 
     const moneyChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
         setMoney(e.target.value)
@@ -196,6 +199,31 @@ export default function Room({ id }: Props) {
 
     }
 
+    const onDelRoom: React.MouseEventHandler<SVGSVGElement> = async (e) => {
+        e.preventDefault()
+        if (!user) {
+            return
+        }
+        const key = toast.loading('กำลังลบ...')
+        deleteRoomApi.mutate({
+            owner_record_id: user?.id,
+            record_id: id as string
+        },
+            {
+                onSuccess: (data) => {
+                    toast.success("ลบสำเร็จ", {
+                        id: key
+                    })
+                    push('/')
+                },
+                onError: (error) => {
+                    toast.error(error.message, {
+                        id: key
+                    })
+                }
+            })
+    }
+
     const IsOwner = user?.id === RoomData?.owner
 
     return (
@@ -212,12 +240,15 @@ export default function Room({ id }: Props) {
                 </div>
             </div> : <>
                 <div className='flex flex-col w-full h-full gap-3'>
-                    <div className='card bg-base-100 border p-3 flex gap-2 w-full'>
-                        <div className='flex gap-1'>
-                            <UserIcon />
-                            <div>{user?.name}</div>
+                    <div className='card bg-base-100 border p-3 flex gap-2 w-full flex-row justify-between'>
+                        <div className='flex gap-1 items-center'>
+                            <Gamepad2Icon />
+                            <div>{RoomData.name}</div>
                         </div>
-                    </div>
+                        {IsOwner &&
+                            <Trash2Icon className='text-red-500 cursor-pointer' onClick={onDelRoom} />
+                        }</div>
+
                     <div className='flex gap-3 h-full'>
                         <div className='flex flex-col gap-3 h-full'>
                             <div className="stats border">
@@ -228,7 +259,7 @@ export default function Room({ id }: Props) {
                             </div>
                             <div className='card bg-base-100 border h-full'>
                                 <div className='card-body'>
-                                    <div className="stat-title">เงินของเรา</div>
+                                    <div className="stat-title">เงินของเรา ({user?.name})</div>
                                     <div className="stat-value">{user?.money.toLocaleString("th-TH") || 0}</div>
                                     <form onSubmit={onBet} className='flex gap-2'>
                                         <input onChange={moneyChangeHandler} value={Money} type="text" className='input input-bordered w-full' placeholder='0' />
