@@ -260,7 +260,7 @@ export default function Room({ id }: Props) {
                             <div className='card bg-base-100 border h-full'>
                                 <div className='card-body'>
                                     <div className="stat-title">เงินของเรา ({user?.name})</div>
-                                    <div className="stat-value">{user?.money.toLocaleString("th-TH") || 0}</div>
+                                    <div className="stat-value">{user?.money.toLocaleString("th-TH") ?? 0}</div>
                                     <form onSubmit={onBet} className='flex gap-2'>
                                         <input onChange={moneyChangeHandler} value={Money} type="text" className='input input-bordered w-full' placeholder='0' />
                                         <button disabled={betApi.isLoading} type='submit' className='btn btn-primary'>

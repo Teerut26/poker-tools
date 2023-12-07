@@ -6,9 +6,7 @@ import MainLayout from '@/layouts/MainLayout'
 import useUserHook from '@/hooks/useUserHook'
 import { useRouter } from 'next/navigation'
 
-interface Props { }
-
-const Createroom: NextPage<Props> = () => {
+const Createroom: NextPage = () => {
     const { user, updateUser } = useUserHook()
     const { push } = useRouter()
     const roomApi = api.roomRouter.create.useMutation()

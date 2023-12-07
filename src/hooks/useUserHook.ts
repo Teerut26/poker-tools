@@ -10,7 +10,7 @@ export default function useUserHook() {
 
   //check if user exists
   useEffect(() => {
-    const userRaw = JSON.parse(localStorage.getItem("user") || "null") as UserInterface;
+    const userRaw = JSON.parse(localStorage.getItem("user") ?? "null") as UserInterface;
     if (userRaw) {
       (async () => {
         try {

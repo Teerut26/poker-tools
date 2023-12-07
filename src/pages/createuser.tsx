@@ -5,9 +5,7 @@ import { NextPage } from 'next'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-interface Props { }
-
-const Createuser: NextPage<Props> = () => {
+const Createuser: NextPage = () => {
     const { push } = useRouter()
     const createUserApi = api.userRouter.create.useMutation()
     const [Name, setName] = useState<string>("")

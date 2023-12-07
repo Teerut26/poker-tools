@@ -24,7 +24,7 @@ export const createRoom = async (data: Room): Promise<RoomInterface> => {
     name: data.name,
     password: passwordHash,
     pot: data.pot,
-    users: data.users || [],
+    users: data.users ?? [],
     owner: data.owner,
   });
   return record;
