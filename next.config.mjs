@@ -6,7 +6,7 @@ await import("./src/env.mjs");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  reactStrictMode: true,
+  reactStrictMode: false,
 
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
@@ -16,6 +16,10 @@ const config = {
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
+  },
+  env: {
+    mqttbroker: "mqtt://broker.emqx.io",
+    pocketbase: "https://poker-tools.pockethost.io",
   },
 };
 
