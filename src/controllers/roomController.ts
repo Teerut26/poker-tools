@@ -14,8 +14,11 @@ type Room = {
 
 export const createRoom = async (data: Room): Promise<RoomInterface> => {
   const pocketbase = await pbAuth(pb);
+  let passwordHash = null;
 
-  const passwordHash = bcrypt.hash(data.password!, 10);
+  if (data.password) {
+    passwordHash = await bcrypt.hash(data.password, 10);
+  }
 
   const record = await pocketbase.collection("room").create<RoomInterface>({
     name: data.name,
@@ -36,11 +39,12 @@ type Join = {
 export const joinRoom = async (data: Join) => {
   const pocketbase = await pbAuth(pb);
   const record_for_check = await pb.collection("room").getOne<RoomInterface>(data.record_id);
-  
-  const passwordCheckResult = await bcrypt.compare(data.password!, record_for_check.password!);
 
-  if (!passwordCheckResult) {
-    throw new Error("Wrong password");
+  if (data.password) {
+    const passwordCheckResult = await bcrypt.compare(data.password!, record_for_check.password!);
+    if (!passwordCheckResult) {
+      throw new Error("Wrong password");
+    }
   }
 
   const record = await pocketbase.collection("room").update<RoomInterface>(data.record_id, {

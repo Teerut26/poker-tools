@@ -4,11 +4,13 @@ import { NextPage } from 'next'
 import { ChangeEvent, useState } from 'react'
 import MainLayout from '@/layouts/MainLayout'
 import useUserHook from '@/hooks/useUserHook'
+import { useRouter } from 'next/navigation'
 
 interface Props { }
 
 const Createroom: NextPage<Props> = () => {
     const { user, updateUser } = useUserHook()
+    const { push } = useRouter()
     const roomApi = api.roomRouter.create.useMutation()
     const [roomName, setRoomName] = useState<string>("")
     const [roomPassword, setRoomPassword] = useState<string>("")
@@ -45,6 +47,7 @@ const Createroom: NextPage<Props> = () => {
                 toast.success("สร้างห้องสำเร็จ", {
                     id: key
                 })
+                push("/")
             }
         })
 
@@ -65,7 +68,7 @@ const Createroom: NextPage<Props> = () => {
 
     return (
         <MainLayout back>
-            <form onSubmit={handleCreateRoom} className="max-w-sm mx-3 flex flex-col gap-2 w-full">
+            <form onSubmit={handleCreateRoom} className="flex flex-col gap-2 w-full">
                 <h2 className="card-title">สร้างห้อง</h2>
                 <input onChange={onChangeRoomName} value={roomName} type="text" placeholder="Room name" className="input input-bordered w-full" />
                 {hasPassword && <input onChange={onChangeRoomPassword} value={roomPassword} type="text" placeholder="Room password" className="input input-bordered w-full" />}

@@ -1,13 +1,13 @@
 import useUserHook from '@/hooks/useUserHook';
 import { RoomInterface } from '@/interfaces/RoomInterface';
-import { UserInterface } from '@/interfaces/UserInterface';
 import MainLayout from '@/layouts/MainLayout';
 import { pb } from '@/utils/pocketbase';
-import { PlusIcon, LogInIcon, UserIcon, LogOutIcon } from 'lucide-react';
+import { PlusIcon, UserIcon, LogOutIcon, LockIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+pb.autoCancellation(false);
 export default function Home() {
     const { push } = useRouter()
     const [IsLoading, setIsLoading] = useState(false)
@@ -15,7 +15,6 @@ export default function Home() {
     const { user, logout } = useUserHook()
 
     useEffect(() => {
-        pb.autoCancellation(false);
         (async () => {
             setIsLoading(true)
             const records = await pb.collection('room').getFullList<RoomInterface>({
@@ -60,7 +59,8 @@ export default function Home() {
                     {!IsLoading ? Rooms.map((room, i) => (
                         <Link href={`/room/${room.id}`} key={i} className="p-5 w-full border flex justify-between hover:bg-gray-100 cursor-pointer">
                             <div className='flex flex-col'>
-                                <div>{room.name}</div>
+                                <div className='flex gap-1 items-center'>
+                                    {room.name} {room.password && room.password !== "" && <LockIcon size={13} />}</div>
                                 <div className='text-xs'>by {room.owner}</div>
                             </div>
                             <div>{room.users.length} <span className='text-xs'>คน</span></div>

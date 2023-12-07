@@ -1,4 +1,5 @@
 import { BaseResponse } from "./BaseResponse";
+import { UserInterface } from "./UserInterface";
 
 export interface RoomInterface extends BaseResponse {
   name: string;
@@ -6,4 +7,10 @@ export interface RoomInterface extends BaseResponse {
   users: string[];
   owner: string;
   password: string;
+}
+
+export interface RoomInterfaceExpand extends RoomInterface {
+  expand?: {
+    users: UserInterface[];
+  };
 }
