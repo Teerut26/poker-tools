@@ -1,20 +1,22 @@
 import { UserInterface } from "@/interfaces/UserInterface";
 import { pb } from "@/utils/pocketbase";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ClientResponseError } from "pocketbase";
 import { useEffect, useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
 
 export default function useUserHook() {
-  const [user, setUser] = useState<UserInterface>();
+  const [user, setUser] = useLocalStorage<UserInterface>("user", {} as UserInterface);
+  const { data: session } = useSession()
   const { push } = useRouter();
 
   //check if user exists
   useEffect(() => {
-    const userRaw = JSON.parse(localStorage.getItem("user") ?? "null") as UserInterface;
-    if (userRaw) {
+    if (session?.user.pocketbaseid) {
       (async () => {
         try {
-          const selfUserData = await pb.collection("user").getOne<UserInterface>(userRaw?.id!);
+          const selfUserData = await pb.collection("user").getOne<UserInterface>(session?.user.pocketbaseid);
           if (selfUserData) {
             updateUser(selfUserData);
           }
@@ -26,17 +28,15 @@ export default function useUserHook() {
           }
         }
       })();
-      pb.collection("user").subscribe<UserInterface>(userRaw.id, function (e) {
+      pb.collection("user").subscribe<UserInterface>(session?.user.pocketbaseid, function (e) {
         if (e.action === "update") {
           updateUser(e.record);
         } else if (e.action === "delete") {
             logout();
         }
       });
-    } else {
-      push("/createuser");
     }
-  }, []);
+  }, [session?.user.pocketbaseid]);
 
   const updateUser = (user: UserInterface) => {
     localStorage.setItem("user", JSON.stringify(user));
@@ -44,9 +44,7 @@ export default function useUserHook() {
   };
 
   const logout = () => {
-    localStorage.removeItem("user");
-    setUser(undefined);
-    push("/createuser");
+    signOut();
   };
 
   return { user, updateUser, logout };

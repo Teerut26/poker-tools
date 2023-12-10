@@ -7,5 +7,6 @@ export interface UserInterface extends BaseResponse {
   created: string;
   updated: string;
   name: string;
+  googleid: string;
   money: number;
 }
