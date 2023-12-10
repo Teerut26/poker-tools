@@ -67,10 +67,11 @@ export const authOptions: NextAuthOptions = {
             });
             pocketbaseid = result.id;
           } else {
-            const result = await pocketbase.collection("user").update<UserInterface>(useExit.items[0]?.id!, {
-              name: profile.name,
-            });
-            pocketbaseid = result.id;
+            // const result = await pocketbase.collection("user").update<UserInterface>(useExit.items[0]?.id!, {
+            //   name: profile.name,
+            // });
+            // pocketbaseid = result.id;
+            pocketbaseid = useExit.items[0]?.id!;
           }
         } catch (error) {
           console.error("Error signing in:", error);

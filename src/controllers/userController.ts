@@ -70,3 +70,16 @@ export const winnerUser = async (data: Winner) => {
 
   return record;
 };
+
+type ChangeName = {
+  name: string;
+  user_record_id: string;
+};
+
+export const changeName = async (data: ChangeName) => {
+  const pocketbase = await pbAuth(pb);
+  const record = await pocketbase.collection("user").update<UserInterface>(data.user_record_id, {
+    name: data.name,
+  });
+  return record;
+};

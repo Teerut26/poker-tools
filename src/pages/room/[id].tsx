@@ -238,7 +238,7 @@ export default function Room({ id }: Props) {
                     </form>
                 </div>
             </div> : <>
-                <div className='flex flex-col w-full h-full gap-3'>
+                <div className='flex flex-col w-full h-full gap-3 bg-base-100 p-2'>
                     <div className='card bg-base-100 border p-3 flex gap-2 w-full flex-row justify-between'>
                         <div className='flex gap-1 items-center'>
                             <Gamepad2Icon />
@@ -258,7 +258,7 @@ export default function Room({ id }: Props) {
                             </div>
                             <div className='card bg-base-100 border h-full'>
                                 <div className='card-body'>
-                                    <div className="stat-title">เงินของเรา ({session?.user?.name})</div>
+                                    <div className="stat-title">เงินของเรา ({user.name})</div>
                                     <div className="stat-value">{user?.money && user?.money.toLocaleString("th-TH")}</div>
                                     <form onSubmit={onBet} className='flex gap-2'>
                                         <input onChange={moneyChangeHandler} value={Money} type="text" className='input input-bordered w-full' placeholder='0' />
