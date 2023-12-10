@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { betUser, changeName, createUser, winnerUser } from "@/controllers/userController";
+import { betUser, changeName, createUser, redeem, winnerUser } from "@/controllers/userController";
 
 export const userRouter = createTRPCRouter({
   create: protectedProcedure.input(z.object({ name: z.string() })).mutation(({ input, ctx }) => {
@@ -15,5 +15,8 @@ export const userRouter = createTRPCRouter({
   }),
   changeName: protectedProcedure.input(z.object({ name: z.string() })).mutation(({ input, ctx }) => {
     return changeName({ name: input.name, user_record_id: ctx.session.user.pocketbaseid! });
+  }),
+  redeem: protectedProcedure.input(z.object({ code: z.string() })).mutation(({ input, ctx }) => {
+    return redeem({ code: input.code, user_record_id: ctx.session.user.pocketbaseid! });
   }),
 });
