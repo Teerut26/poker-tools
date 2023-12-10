@@ -1,6 +1,5 @@
 import useUserHook from '@/hooks/useUserHook';
 import { RoomInterface } from '@/interfaces/RoomInterface';
-// import MainLayout from '@/layouts/MainLayout';
 import { pb } from '@/utils/pocketbase';
 import { PlusIcon, UserIcon, LogOutIcon, LockIcon, CoinsIcon, CircleDollarSignIcon } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
@@ -61,34 +60,34 @@ export default function Home() {
         <MainLayout>
             <div className="flex flex-col w-full gap-2">
                 <div className='flex justify-between items-center'>
-                    <div className="text-xl">
-                        ห้องทั้งหมด
-                    </div>
-                    <div className="flex gap-2 items-center">
-                        <div className='flex flex-col'>
-                            <div className='border p-1 flex gap-1 items-center'>
-                                <UserIcon size={20} />
-                                {user?.name}
-                            </div>
-                            <div className='border p-1 flex gap-1 items-center'>
-                                <CircleDollarSignIcon size={20} />
-                                {user?.money && user?.money.toLocaleString()}
-                            </div>
+                    <div className='flex flex-col'>
+                        <div className="text-xl">
+                            ห้องทั้งหมด
                         </div>
-                        <LogOutIcon onClick={logout} size={20} className='text-error cursor-pointer' />
+                        
+
                     </div>
                 </div>
-                <div className="max-h-[55vh] border w-full overflow-y-auto p-2 gap-2 flex flex-col">
-                    {!IsLoading ? Rooms.map((room, i) => (
-                        <Link href={`/room/${room.id}`} key={i} className="p-5 w-full border flex justify-between hover:bg-gray-100 cursor-pointer">
-                            <div className='flex flex-col'>
-                                <div className='flex gap-1 items-center'>
-                                    {room.name} {room.password && room.password !== "" && <LockIcon size={13} />}</div>
-                                <div className='text-xs'>by {room.owner}</div>
-                            </div>
-                            <div>{room.users.length} <span className='text-xs'>คน</span></div>
-                        </Link>
-                    )) : <div className='h-full'><span className="loading loading-dots loading-lg"></span></div>}
+                <div className="h-[55vh] border w-full overflow-y-auto p-2 gap-2 flex flex-col">
+                    {!IsLoading ? <>
+                        {Rooms.length <= 0 ? <div className='h-full flex justify-center flex-col items-center'>
+                            <div>ไม่มีห้อง</div>
+                        </div> :
+                            Rooms.map((room, i) => (
+                                <Link href={`/room/${room.id}`} key={i} className="p-5 w-full border flex justify-between hover:bg-gray-100 cursor-pointer">
+                                    <div className='flex flex-col'>
+                                        <div className='flex gap-1 items-center'>
+                                            {room.name} {room.password && room.password !== "" && <LockIcon size={13} />}</div>
+                                        <div className='text-xs'>by {room.owner}</div>
+                                    </div>
+                                    <div>{room.users.length} <span className='text-xs'>คน</span></div>
+                                </Link>
+                            ))
+                        }
+                    </> : <div className='h-full flex justify-center flex-col items-center'>
+                        <span className="loading loading-dots loading-lg"></span>
+                        <div>Loading...</div>
+                    </div>}
                 </div>
             </div>
             <div className="flex w-full justify-around">

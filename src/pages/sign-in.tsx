@@ -12,7 +12,7 @@ const Createuser: NextPage = () => {
         await signIn('google', { callbackUrl: '/' })
     }
     return (
-        <MainLayout>
+        <MainLayout navbar={false}>
             <div className='flex justify-center'>
                 <button onClick={onSignIn} className='btn btn-primary'>
                     Sign in with Google

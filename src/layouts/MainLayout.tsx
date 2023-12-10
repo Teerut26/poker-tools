@@ -1,6 +1,8 @@
+import useUserHook from '@/hooks/useUserHook'
 import clsx from 'clsx'
-import { ArrowLeftIcon } from 'lucide-react'
+import { ArrowLeftIcon, CircleDollarSignIcon, LogOutIcon, UserIcon } from 'lucide-react'
 import { NextPage } from 'next'
+import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 
 interface Props {
@@ -9,10 +11,13 @@ interface Props {
     className?: string
     classNameBtn?: string
     isLoading?: boolean
+    navbar?: boolean
 }
 
-const MainLayout: NextPage<Props> = ({ children, back, className, classNameBtn, isLoading }) => {
-    const { back: backFunc } = useRouter()
+const MainLayout: NextPage<Props> = ({ children, back, className, classNameBtn, isLoading, navbar = true }) => {
+    const { back: backFunc, push } = useRouter()
+    const { user } = useUserHook()
+
     if (isLoading) return (
         <div className='flex min-h-screen justify-center items-center'>
             <div className='flex flex-col items-center gap-2'>
@@ -29,6 +34,24 @@ const MainLayout: NextPage<Props> = ({ children, back, className, classNameBtn, 
                         <ArrowLeftIcon /> กลับ
                     </button>
                 </div>}
+                {navbar &&
+                    <div className='flex justify-between bg-base-100'>
+                        <div className='flex  gap-2'>
+                            <div className='border p-1 flex gap-1 items-center cursor-pointer' onClick={() => {
+                                push('/changename')
+                            }}>
+                                <UserIcon size={20} />
+                                {user?.name}
+                            </div>
+                            <div className='border p-1 flex gap-1 items-center'>
+                                <CircleDollarSignIcon size={20} />
+                                {user?.money && user?.money.toLocaleString()}
+                            </div>
+                        </div>
+                        <div className="flex gap-2 items-center px-2">
+                            <LogOutIcon onClick={() => signOut()} size={20} className='text-error cursor-pointer' />
+                        </div>
+                    </div>}
                 {children}
             </div>
         </div>
