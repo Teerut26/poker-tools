@@ -8,12 +8,12 @@ type TurnstileVerify = {
 };
 
 const turnstileVerify = async (data: TurnstileVerify) => {
-  let formData = new FormData();
+  const formData = new FormData();
   formData.append("secret", env.TURNSTILE_SECRET);
   formData.append("response", data.token);
   formData.append("remoteip", data.remoteip);
 
-  let { data: res } = await axios({
+  const { data: res } = await axios({
     method: "post",
     maxBodyLength: Infinity,
     url: "https://challenges.cloudflare.com/turnstile/v0/siteverify",

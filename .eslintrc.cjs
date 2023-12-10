@@ -7,7 +7,6 @@ const config = {
   plugins: ["@typescript-eslint"],
   extends: [
     "next/core-web-vitals",
-    "plugin:@typescript-eslint/stylistic-type-checked",
   ],
   rules: {
     // These opinionated rules are enabled in stylistic-type-checked above.
