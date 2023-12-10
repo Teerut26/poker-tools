@@ -1,5 +1,6 @@
 import { UserInterface } from '@/interfaces/UserInterface'
 import { pb } from '@/utils/pocketbase'
+import { CircleDollarSignIcon } from 'lucide-react'
 import { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 
@@ -34,9 +35,9 @@ const Player: NextPage<Props> = ({ id, winnerButton }) => {
     return (
         <>
             <div className='border p-3 flex justify-between'>
-                {IsLoading ? <div>Loading...</div> : <div className='flex flex-col'>
-                    <div>{UserData.name}</div>
-                    <div>{UserData.money.toLocaleString("th-TH")}</div>
+                {IsLoading ? <div><span className="loading loading-dots loading-lg"></span></div> : <div className='flex flex-col'>
+                    <div className='truncate max-w-[10rem] font-bold'>{UserData.name}</div>
+                    <div className='flex gap-1 items-center'><CircleDollarSignIcon size={15} />{UserData.money.toLocaleString("th-TH")}</div>
                 </div>}
                 {winnerButton}
             </div>

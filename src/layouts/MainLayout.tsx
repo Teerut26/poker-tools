@@ -13,7 +13,14 @@ interface Props {
 
 const MainLayout: NextPage<Props> = ({ children, back, className, classNameBtn, isLoading }) => {
     const { back: backFunc } = useRouter()
-    if (isLoading) return (<>Loading...</>)
+    if (isLoading) return (
+        <div className='flex min-h-screen justify-center items-center'>
+            <div className='flex flex-col items-center gap-2'>
+                <span className="loading loading-ring loading-lg"></span>
+                <div className='text-xl'>Loading...</div>
+            </div>
+        </div>
+    )
     return (
         <div className={clsx("min-h-screen flex justify-center items-center", className && className)}>
             <div className="flex flex-col w-full max-w-3xl gap-3 mx-3">

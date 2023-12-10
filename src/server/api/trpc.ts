@@ -13,6 +13,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { getServerAuthSession } from "@/server/auth";
+import { NextApiRequest } from "next";
 
 /**
  * 1. CONTEXT
@@ -24,6 +25,7 @@ import { getServerAuthSession } from "@/server/auth";
 
 interface CreateContextOptions {
   session: Session | null;
+  req: NextApiRequest;
 }
 
 /**
@@ -36,9 +38,10 @@ interface CreateContextOptions {
  *
  * @see https://create.t3.gg/en/usage/trpc#-serverapitrpcts
  */
-const createInnerTRPCContext = ({ session }: CreateContextOptions) => {
+const createInnerTRPCContext = ({ session,req }: CreateContextOptions) => {
   return {
     session,
+    req,
   };
 };
 
@@ -57,6 +60,7 @@ export const createTRPCContext = async ({
 
   return createInnerTRPCContext({
     session,
+    req,
   });
 };
 

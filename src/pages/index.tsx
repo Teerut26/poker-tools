@@ -1,18 +1,22 @@
 import useUserHook from '@/hooks/useUserHook';
 import { RoomInterface } from '@/interfaces/RoomInterface';
-import MainLayout from '@/layouts/MainLayout';
+// import MainLayout from '@/layouts/MainLayout';
 import { pb } from '@/utils/pocketbase';
-import { PlusIcon, UserIcon, LogOutIcon, LockIcon } from 'lucide-react';
+import { PlusIcon, UserIcon, LogOutIcon, LockIcon, CoinsIcon, CircleDollarSignIcon } from 'lucide-react';
+import { signOut, useSession } from 'next-auth/react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+const MainLayout = dynamic(() => import('@/layouts/MainLayout'), { ssr: false })
 
 pb.autoCancellation(false);
 export default function Home() {
     const { push } = useRouter()
     const [IsLoading, setIsLoading] = useState(false)
     const [Rooms, setRooms] = useState<RoomInterface[]>([])
-    const { user, logout } = useUserHook()
+    const { user } = useUserHook()
 
     useEffect(() => {
         (async () => {
@@ -33,6 +37,15 @@ export default function Home() {
                     prev[index] = e.record;
                     return [...prev];
                 });
+            } else if (e.action === 'delete') {
+                setRooms((prev) => {
+                    const index = prev.findIndex((room) => room.id === e.record.id);
+                    if (index === -1) {
+                        return prev;
+                    }
+                    prev.splice(index, 1);
+                    return [...prev];
+                });
             }
         });
         return () => {
@@ -40,17 +53,27 @@ export default function Home() {
         }
     }, [])
 
+    const logout = async () => {
+        await signOut();
+    }
+
     return (
         <MainLayout>
             <div className="flex flex-col w-full gap-2">
-                <div className='flex justify-between'>
+                <div className='flex justify-between items-center'>
                     <div className="text-xl">
                         ห้องทั้งหมด
                     </div>
                     <div className="flex gap-2 items-center">
-                        <div className='border p-1 flex gap-1 items-center'>
-                            <UserIcon size={20} />
-                            {user?.name}
+                        <div className='flex flex-col'>
+                            <div className='border p-1 flex gap-1 items-center'>
+                                <UserIcon size={20} />
+                                {user?.name}
+                            </div>
+                            <div className='border p-1 flex gap-1 items-center'>
+                                <CircleDollarSignIcon size={20} />
+                                {user?.money && user?.money.toLocaleString()}
+                            </div>
                         </div>
                         <LogOutIcon onClick={logout} size={20} className='text-error cursor-pointer' />
                     </div>
@@ -65,7 +88,7 @@ export default function Home() {
                             </div>
                             <div>{room.users.length} <span className='text-xs'>คน</span></div>
                         </Link>
-                    )) : <div className='h-full'>กำลังโหลด...</div>}
+                    )) : <div className='h-full'><span className="loading loading-dots loading-lg"></span></div>}
                 </div>
             </div>
             <div className="flex w-full justify-around">

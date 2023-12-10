@@ -1,6 +1,6 @@
 import useUserHook from '@/hooks/useUserHook'
 import { RoomInterface } from '@/interfaces/RoomInterface'
-import MainLayout from '@/layouts/MainLayout'
+// import MainLayout from '@/layouts/MainLayout'
 import { api } from '@/utils/api'
 import { pb } from '@/utils/pocketbase'
 import { NextPageContext } from 'next'
@@ -11,6 +11,9 @@ import toast from 'react-hot-toast'
 import _ from 'lodash'
 import Player from '@/components/Player'
 import { Gamepad2Icon, Trash2Icon } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import dynamic from 'next/dynamic'
+const MainLayout = dynamic(() => import('@/layouts/MainLayout'), { ssr: true })
 
 Room.getInitialProps = async (ctx: NextPageContext) => {
     const { id } = ctx.query
@@ -30,8 +33,8 @@ export default function Room({ id }: Props) {
     const [HasPassword, setHasPassword] = useState(false);
     const [Users, setUsers] = useState<string[]>([]);
     const [IsLoading, setIsLoading] = useState(true);
-
-    const { user } = useUserHook();
+    const { data: session } = useSession()
+    const { user } = useUserHook()
     const { push } = useRouter();
 
     const joinRoomApi = api.roomRouter.join.useMutation()
@@ -40,18 +43,18 @@ export default function Room({ id }: Props) {
     const deleteRoomApi = api.roomRouter.delete.useMutation()
 
     useEffect(() => {
-        if (!user) {
+        if (!session) {
             return
         }
 
         (async () => {
             setIsLoading(true)
             try {
-                const roomData = await pb.collection('room').getOne<RoomInterface>(id as string)
+                const roomData = await initRoomData()
                 setUsers(roomData.users)
                 setRoomData(roomData)
 
-                if (roomData.users.includes(user?.id!)) {
+                if (roomData.users.includes(session?.user.pocketbaseid)) {
                     setIsLoading(false)
                     return
                 }
@@ -73,7 +76,14 @@ export default function Room({ id }: Props) {
             }
 
         })()
-    }, [user?.id])
+    }, [session?.user.pocketbaseid])
+
+    const initRoomData = async () => {
+        const roomData = await pb.collection('room').getOne<RoomInterface>(id as string)
+        setUsers(roomData.users)
+        setRoomData(roomData)
+        return roomData
+    }
 
     useEffect(() => {
         pb.collection('room').subscribe<RoomInterface>(id as string, function (e) {
@@ -111,14 +121,14 @@ export default function Room({ id }: Props) {
         setIsLoading(true)
         joinRoomApi.mutate({
             record_id: id as string,
-            user_record_id: user?.id!,
             password: (Password && Password.length > 0) ? Password : undefined
         }, {
-            onSuccess: (data) => {
+            onSuccess: async (data) => {
                 setHasPassword(false)
                 toast.success("เข้ารวมสำเร็จ", {
                     id: key
                 })
+                await initRoomData()
                 setIsLoading(false)
             },
             onError: (error) => {
@@ -155,16 +165,12 @@ export default function Room({ id }: Props) {
             return
         }
 
-        if (Number(Money) > user?.money!) {
-            toast.error("เงินไม่พอ")
-            return
-        }
-        if (!user) {
+        if (!session?.user.pocketbaseid) {
             return
         }
 
         betApi.mutate({
-            record_id: user?.id,
+            record_id: session?.user.pocketbaseid,
             money: Number(Money),
             room_id: id as string
         },
@@ -181,9 +187,6 @@ export default function Room({ id }: Props) {
 
     const onWinner: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
         e.preventDefault()
-        if (!user) {
-            return
-        }
         winnerApi.mutate({
             room_record_id: id as string,
             user_record_id: e.currentTarget.value
@@ -201,12 +204,8 @@ export default function Room({ id }: Props) {
 
     const onDelRoom: React.MouseEventHandler<SVGSVGElement> = async (e) => {
         e.preventDefault()
-        if (!user) {
-            return
-        }
         const key = toast.loading('กำลังลบ...')
         deleteRoomApi.mutate({
-            owner_record_id: user?.id,
             record_id: id as string
         },
             {
@@ -224,7 +223,7 @@ export default function Room({ id }: Props) {
             })
     }
 
-    const IsOwner = user?.id === RoomData?.owner
+    const IsOwner = session?.user.pocketbaseid === RoomData?.owner
 
     return (
         <MainLayout isLoading={IsLoading} className='bg-[#1E662D]' back classNameBtn='btn btn-primary'>
@@ -259,8 +258,8 @@ export default function Room({ id }: Props) {
                             </div>
                             <div className='card bg-base-100 border h-full'>
                                 <div className='card-body'>
-                                    <div className="stat-title">เงินของเรา ({user?.name})</div>
-                                    <div className="stat-value">{user?.money.toLocaleString("th-TH") ?? 0}</div>
+                                    <div className="stat-title">เงินของเรา ({session?.user?.name})</div>
+                                    <div className="stat-value">{user?.money && user?.money.toLocaleString("th-TH")}</div>
                                     <form onSubmit={onBet} className='flex gap-2'>
                                         <input onChange={moneyChangeHandler} value={Money} type="text" className='input input-bordered w-full' placeholder='0' />
                                         <button disabled={betApi.isLoading} type='submit' className='btn btn-primary'>

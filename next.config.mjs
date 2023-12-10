@@ -20,6 +20,7 @@ const config = {
   env: {
     mqttbroker: "mqtt://broker.emqx.io",
     pocketbase: "https://poker-tools.pockethost.io",
+    turnstileSiteKey: "0x4AAAAAAAOTHJSJnEOhxYDT",
   },
 };
 

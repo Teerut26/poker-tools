@@ -1,59 +1,90 @@
-import { type GetServerSidePropsContext } from "next";
-import {
-  getServerSession,
-  type DefaultSession,
-  type NextAuthOptions,
-} from "next-auth";
+import { GetServerSidePropsContext } from "next";
+import { getServerSession, NextAuthOptions, DefaultSession, DefaultUser } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 import { env } from "@/env.mjs";
+import { UserInterface } from "@/interfaces/UserInterface";
+import { pb, pbAuth } from "@/utils/pocketbase";
 
-/**
- * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
- * object and keep type safety.
- *
- * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
- */
 declare module "next-auth" {
   interface Session extends DefaultSession {
-    user: DefaultSession["user"] & {
-      id: string;
-      // ...other properties
-      // role: UserRole;
+    user: DefaultUser & {
+      pocketbaseid: string;
     };
   }
-
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User extends DefaultUser {
+    id: string;
+    pocketbaseid: string;
+  }
 }
 
-/**
- * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
- *
- * @see https://next-auth.js.org/configuration/options
- */
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    pocketbaseid: string;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, token }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: token.sub,
-      },
-    }),
+    session: ({ session, token }) => {
+      session.user.id = token.id;
+      session.user.pocketbaseid = token.pocketbaseid;
+
+      return session;
+    },
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+        token.pocketbaseid = user.pocketbaseid;
+      }
+
+      return token;
+    },
+  },
+
+  pages: {
+    signIn: "/sign-in",
   },
   providers: [
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
+    GoogleProvider({
+      name: "Google Sign In",
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      async profile(profile, tokens) {
+        let pocketbaseid = "";
+        try {
+          const pocketbase = await pbAuth(pb);
+          const useExit = await pb.collection("user").getList<UserInterface>(1, 2, {
+            filter: `googleid="${profile.sub}" `,
+          });
+
+          if (useExit.items.length === 0) {
+            const result = await pocketbase.collection("user").create<UserInterface>({
+              name: profile.name,
+              money: 10000,
+              googleid: profile.sub,
+            });
+            pocketbaseid = result.id;
+          } else {
+            const result = await pocketbase.collection("user").update<UserInterface>(useExit.items[0]?.id!, {
+              name: profile.name,
+            });
+            pocketbaseid = result.id;
+          }
+        } catch (error) {
+          console.error("Error signing in:", error);
+        }
+
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          pocketbaseid: pocketbaseid,
+        };
+      },
+    }),
   ],
 };
 
@@ -62,9 +93,6 @@ export const authOptions: NextAuthOptions = {
  *
  * @see https://next-auth.js.org/configuration/nextjs
  */
-export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"];
-  res: GetServerSidePropsContext["res"];
-}) => {
+export const getServerAuthSession = (ctx: GetServerSidePropsContext) => {
   return getServerSession(ctx.req, ctx.res, authOptions);
 };

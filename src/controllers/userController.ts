@@ -47,11 +47,16 @@ export const betUser = async (data: Bet) => {
 type Winner = {
   user_record_id: string;
   room_record_id: string;
+  owner_record_id: string;
 };
 
 export const winnerUser = async (data: Winner) => {
   const pocketbase = await pbAuth(pb);
   const roomData = await pocketbase.collection("room").getOne<RoomInterface>(data.room_record_id);
+
+  if (roomData.owner !== data.owner_record_id) {
+    throw new Error("Not owner");
+  }
 
   const roomMoney = roomData?.pot || 0;
 
@@ -60,7 +65,7 @@ export const winnerUser = async (data: Winner) => {
   });
 
   await pocketbase.collection("room").update<RoomInterface>(data.room_record_id, {
-    "pot": 0,
+    pot: 0,
   });
 
   return record;

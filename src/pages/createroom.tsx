@@ -3,16 +3,16 @@ import { toast } from "react-hot-toast"
 import { NextPage } from 'next'
 import { ChangeEvent, useState } from 'react'
 import MainLayout from '@/layouts/MainLayout'
-import useUserHook from '@/hooks/useUserHook'
 import { useRouter } from 'next/navigation'
+import TurnstileWidget from '@/components/TurnstileWidget'
 
 const Createroom: NextPage = () => {
-    const { user, updateUser } = useUserHook()
     const { push } = useRouter()
     const roomApi = api.roomRouter.create.useMutation()
     const [roomName, setRoomName] = useState<string>("")
     const [roomPassword, setRoomPassword] = useState<string>("")
     const [hasPassword, setHasPassword] = useState(false)
+    const [Token, setToken] = useState<string>("")
 
     const handleCreateRoom = (e: ChangeEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -31,13 +31,12 @@ const Createroom: NextPage = () => {
         roomApi.mutate({
             roomname: roomName,
             roompassword: roomPassword || undefined,
-            user_record_id: user?.id!
+            token: Token
         }, {
             onError: (err) => {
                 if (err instanceof Error) {
                     toast.error(err.message, {
                         id: key
-
                     })
                 }
             },
@@ -73,6 +72,9 @@ const Createroom: NextPage = () => {
                 <div className="flex gap-2 items-center">
                     <input type="checkbox" onChange={onChangeHasPassword} checked={hasPassword} className="checkbox checkbox-sm checkbox-primary" />
                     <div>รหัสห้อง</div>
+                </div>
+                <div className='flex justify-center'>
+                    <TurnstileWidget onVerify={(token) => setToken(token)} />
                 </div>
                 <button type="submit" className="btn btn-primary">
                     สร้าง
