@@ -37,13 +37,15 @@ const MainLayout: NextPage<Props> = ({ children, back, className, classNameBtn, 
                 {navbar &&
                     <div className='flex justify-between bg-base-100'>
                         <div className='flex  gap-2'>
-                            <div className='border p-1 flex gap-1 items-center cursor-pointer' onClick={() => {
+                            <div className='border p-1 flex gap-1 items-center cursor-pointer hover:bg-base-200' onClick={() => {
                                 push('/changename')
                             }}>
                                 <UserIcon size={20} />
                                 {user?.name}
                             </div>
-                            <div className='border p-1 flex gap-1 items-center'>
+                            <div className='border p-1 flex gap-1 items-center cursor-pointer hover:bg-base-200' onClick={() => {
+                                push('/redeem')
+                            }}>
                                 <CircleDollarSignIcon size={20} />
                                 {user?.money && user?.money.toLocaleString()}
                             </div>

@@ -1,6 +1,8 @@
+import { RedeemInterface } from "@/interfaces/RedeemInterface";
 import { RoomInterface } from "@/interfaces/RoomInterface";
 import { UserInterface } from "@/interfaces/UserInterface";
 import { pb, pbAuth } from "@/utils/pocketbase";
+import { ClientResponseError } from "pocketbase";
 
 type Create = {
   name: string;
@@ -82,4 +84,43 @@ export const changeName = async (data: ChangeName) => {
     name: data.name,
   });
   return record;
+};
+
+type Redeem = {
+  code: string;
+  user_record_id: string;
+};
+
+export const redeem = async (data: Redeem) => {
+  const pocketbase = await pbAuth(pb);
+  const redeemExit = await pocketbase.collection("redeem").getList<RedeemInterface>(1, 2, {
+    filter: `code="${data.code}" `,
+  });
+
+  const redeemItem = redeemExit.items[0];
+
+  if (!redeemItem) {
+    throw new Error("Code not found");
+  }
+
+  if (redeemItem.quote <= 0) {
+    throw new Error("Code has used its full quota.");
+  }
+
+  if (redeemItem.users.includes(data.user_record_id)) {
+    throw new Error("Code is used");
+  }
+
+  console.log("asdfdsf");
+
+  const result = await pocketbase.collection("redeem").update<RedeemInterface>(redeemExit.items[0]?.id!, {
+    "quote-": 1,
+    users: [...redeemItem?.users!, data.user_record_id],
+  });
+
+  await pocketbase.collection("user").update<UserInterface>(data.user_record_id, {
+    "money+": redeemItem.value,
+  });
+
+  return result.value;
 };
